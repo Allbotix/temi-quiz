@@ -1,123 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Temi Quiz</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <style>
-        body { padding: 20px; }
-        #ratingContainer button {
-            margin: 0 2px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Temi Quiz</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #f4f7fa; font-family: 'Inter', sans-serif; padding: 20px; }
+    #quizContainer { background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 30px; max-width: 640px; margin: 0 auto; }
+    #questionText { font-size: 1.5rem; font-weight: 600; color: #2c3e50; margin-bottom: 20px; }
+    .btn-answer { display: block; width: 100%; margin-bottom: 10px; font-weight: 600; border: none; border-radius: 8px; padding: 12px; background: linear-gradient(90deg, #007bff, #00c6ff); color: #fff; }
+    .btn-answer:hover { background: linear-gradient(90deg, #0055cc, #0099cc); }
+    .btn-rating { margin: 5px; width: 44px; height: 44px; font-weight: 600; border: none; border-radius: 50%; background: linear-gradient(90deg, #6f42c1, #d63384); color: #fff; }
+    .btn-rating:hover { background: linear-gradient(90deg, #5a3799, #b52072); }
+    #completionMessage { background-color: #e2f7e2; color: #2a6929; border-radius: 12px; padding: 20px; font-size: 1.2rem; text-align: center; display: none; max-width: 640px; margin: 0 auto; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div id="quizContainer" class="p-4 border rounded">
-            <h3 id="questionText"></h3>
-            <div id="optionsContainer"></div>
-            <div id="ratingContainer" class="d-flex flex-wrap"></div>
-        </div>
-        <div id="completionMessage" class="alert alert-success mt-4" style="display:none;">
-            Thank you! You have completed the quiz.
-        </div>
-    </div>
+<div id="quizContainer">
+  <div id="questionSection">
+    <div id="questionText"></div>
+    <div id="optionsContainer"></div>
+    <div id="ratingContainer" class="d-flex flex-wrap justify-content-center"></div>
+  </div>
+</div>
+<div id="completionMessage"></div>
 
-    <audio id="audioPlayer"></audio>
+<audio id="audioPlayer"></audio>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzP-aNrz7v0k1c6itgfNDPccBRWhEdI_w7Yz5vDlOk5UGwaPGtx7HKxMIV1W6sSbbXU/exec'; // Set to your deployed Apps Script Web App
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxMxMQwKow4S_xC1hlXdwBgLDgq38rVXa5S0jGAHbajmaT1H2iMonJ0E0JOjSa_HY_g/exec';
 
-        let questions = [];
-        let currentIndex = 0;
+let questions = [];
+let currentIndex = 0;
 
-        function fetchQuestions() {
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    questions = data.filter(q => q.enabled === true || q.enabled === 'TRUE');
-                    currentIndex = 0;
-                    if (questions.length > 0) {
-                        showQuestion();
-                    } else {
-                        document.getElementById('quizContainer').style.display = 'none';
-                        document.getElementById('completionMessage').textContent = 'No questions available.';
-                        document.getElementById('completionMessage').style.display = 'block';
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to load questions. Check API URL.');
-                });
-        }
+document.addEventListener('DOMContentLoaded', () => {
+  fetchQuestions();
+});
 
-        function showQuestion() {
-            if (currentIndex >= questions.length) {
-                document.getElementById('quizContainer').style.display = 'none';
-                document.getElementById('completionMessage').style.display = 'block';
-                return;
-            }
-            const q = questions[currentIndex];
-            document.getElementById('questionText').textContent = q.question;
-            const optionsContainer = document.getElementById('optionsContainer');
-            const ratingContainer = document.getElementById('ratingContainer');
-            optionsContainer.innerHTML = '';
-            ratingContainer.innerHTML = '';
+function fetchQuestions() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      questions = data.filter(q => q.enabled === true || q.enabled === 'TRUE');
+      currentIndex = 0;
+      if (questions.length > 0) {
+        showQuestion();
+      } else {
+        showCompletion('No questions available.');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to load questions.');
+    });
+}
 
-            // play audio if provided
-            if (q.audioURL) {
-                const audioPlayer = document.getElementById('audioPlayer');
-                audioPlayer.src = q.audioURL;
-                audioPlayer.play();
-            }
+function showQuestion() {
+  if (currentIndex >= questions.length) {
+    showCompletion('Thank you for completing the quiz!');
+    return;
+  }
+  const q = questions[currentIndex];
+  document.getElementById('questionText').textContent = q.question;
+  const optionsContainer = document.getElementById('optionsContainer');
+  const ratingContainer = document.getElementById('ratingContainer');
+  optionsContainer.innerHTML = '';
+  ratingContainer.innerHTML = '';
+  
+  // play audio once
+  if (q.audioURL) {
+    const audio = document.getElementById('audioPlayer');
+    audio.src = q.audioURL;
+    audio.play();
+  }
+  
+  if (q.type === 'mcq') {
+    const opts = [q.option1, q.option2, q.option3, q.option4];
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-answer';
+      btn.textContent = opt;
+      btn.onclick = () => submitAnswer(q.id, opt);
+      optionsContainer.appendChild(btn);
+    });
+  } else {
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-rating';
+      btn.textContent = i;
+      btn.onclick = () => submitAnswer(q.id, i);
+      ratingContainer.appendChild(btn);
+    }
+  }
+}
 
-            if (q.type === 'mcq') {
-                const options = [q.option1, q.option2, q.option3, q.option4];
-                options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = 'btn btn-primary m-1';
-                    btn.textContent = opt;
-                    btn.addEventListener('click', () => {
-                        saveAnswer(q.id, opt);
-                    });
-                    optionsContainer.appendChild(btn);
-                });
-            } else if (q.type === 'rating') {
-                for (let i = 1; i <= 10; i++) {
-                    const btn = document.createElement('button');
-                    btn.className = 'btn btn-primary m-1';
-                    btn.textContent = i;
-                    btn.addEventListener('click', () => {
-                        saveAnswer(q.id, i);
-                    });
-                    ratingContainer.appendChild(btn);
-                }
-            }
-        }
+function submitAnswer(questionId, answer) {
+  const params = new URLSearchParams();
+  params.append('action', 'saveResponse');
+  params.append('questionId', questionId);
+  params.append('answer', answer);
+  fetch(API_URL, { method: 'POST', body: params })
+    .then(res => res.text())
+    .then(() => {
+      currentIndex++;
+      showQuestion();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to submit answer.');
+    });
+}
 
-        function saveAnswer(questionId, answer) {
-            const params = new URLSearchParams();
-            params.append('action', 'saveResponse');
-            params.append('questionId', questionId);
-            params.append('answer', answer);
-
-            fetch(API_URL, {
-                method: 'POST',
-                body: params
-            })
-            .then(response => response.text())
-            .then(result => {
-                currentIndex++;
-                showQuestion();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Failed to save response.');
-            });
-        }
-
-        // start
-        fetchQuestions();
-    </script>
+function showCompletion(message) {
+  document.getElementById('quizContainer').style.display = 'none';
+  const cm = document.getElementById('completionMessage');
+  cm.textContent = message;
+  cm.style.display = 'block';
+}
+</script>
 </body>
 </html>
