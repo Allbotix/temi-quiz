@@ -1,311 +1,365 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Temi Quiz Admin</title>
-    <!-- Include Bootstrap for styling -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <style>
-        body { padding: 20px; }
-        .hidden { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Temi Quiz Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { background-color: #f4f7fa; font-family: 'Inter', sans-serif; padding: 20px; }
+    h1 { color: #2c3e50; font-weight: 600; margin-bottom: 20px; }
+    .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    .btn-primary { background: linear-gradient(90deg, #007bff, #00c6ff); border: none; }
+    .btn-primary:hover { background: linear-gradient(90deg, #0055cc, #0099cc); }
+    .btn-success { background: linear-gradient(90deg, #28a745, #00c851); border: none; }
+    .btn-success:hover { background: linear-gradient(90deg, #1e7e34, #00944a); }
+    .table thead { background-color: #007bff; color: #fff; }
+    .form-label { font-weight: 600; }
+    .spinner-border { width: 1.5rem; height: 1.5rem; }
+  </style>
 </head>
 <body>
-    <h1>Temi Quiz Admin Panel</h1>
-    <!-- Table to list all questions -->
-    <div class="mb-4">
-        <h2>Questions</h2>
-        <table id="questionsTable" class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Question</th>
-                    <th>Type</th>
-                    <th>Option1</th>
-                    <th>Option2</th>
-                    <th>Option3</th>
-                    <th>Option4</th>
-                    <th>Audio</th>
-                    <th>Enabled</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="questionsBody">
-            </tbody>
+<div class="container">
+  <h1 class="text-center">Temi Quiz Admin</h1>
+  
+  <!-- Questions Table -->
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Questions</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Type</th>
+              <th>Options</th>
+              <th>Audio</th>
+              <th>Enabled</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="questionsBody">
+          </tbody>
         </table>
+      </div>
     </div>
-
-    <!-- Form to add or edit a question -->
-    <div class="mb-4">
-        <h2 id="formTitle">Add Question</h2>
-        <form id="questionForm">
-            <input type="hidden" id="questionId">
-            <div class="mb-3">
-                <label for="questionInput" class="form-label">Question</label>
-                <textarea class="form-control" id="questionInput" required></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="typeSelect" class="form-label">Type</label>
-                <select id="typeSelect" class="form-select" required>
-                    <option value="">Choose...</option>
-                    <option value="mcq">Multiple Choice</option>
-                    <option value="rating">Rating (1–10)</option>
-                </select>
-            </div>
-            <div id="optionsGroup" class="mb-3 hidden">
-                <label class="form-label">Options</label>
-                <input type="text" class="form-control mb-2" id="option1" placeholder="Option 1">
-                <input type="text" class="form-control mb-2" id="option2" placeholder="Option 2">
-                <input type="text" class="form-control mb-2" id="option3" placeholder="Option 3">
-                <input type="text" class="form-control mb-2" id="option4" placeholder="Option 4">
-            </div>
-            <div class="mb-3">
-                <label for="audioInput" class="form-label">Audio URL</label>
-                <input type="url" class="form-control" id="audioInput" placeholder="Enter or paste audio file URL">
-            </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="enabledCheck" checked>
-                <label class="form-check-label" for="enabledCheck">Enabled</label>
-            </div>
-            <button type="submit" class="btn btn-primary" id="submitButton">Add Question</button>
-            <button type="button" class="btn btn-secondary" id="cancelEditButton" style="display:none;">Cancel Edit</button>
-        </form>
+  </div>
+  
+  <!-- Add/Edit Form -->
+  <div class="card">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0" id="formTitle">Add New Question</h5>
     </div>
+    <div class="card-body">
+      <form id="questionForm">
+        <input type="hidden" id="questionId">
+        <div class="mb-3">
+          <label class="form-label" for="questionInput">Question</label>
+          <textarea id="questionInput" class="form-control" rows="2" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="typeSelect">Type</label>
+          <select id="typeSelect" class="form-select" required>
+            <option value="">Choose type...</option>
+            <option value="mcq">Multiple Choice</option>
+            <option value="rating">Rating (1–10)</option>
+          </select>
+        </div>
+        <div id="optionsGroup" class="mb-3" style="display:none;">
+          <label class="form-label">Options</label>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input id="option1" type="text" class="form-control" placeholder="Option 1">
+            </div>
+            <div class="col-md-6">
+              <input id="option2" type="text" class="form-control" placeholder="Option 2">
+            </div>
+            <div class="col-md-6">
+              <input id="option3" type="text" class="form-control" placeholder="Option 3">
+            </div>
+            <div class="col-md-6">
+              <input id="option4" type="text" class="form-control" placeholder="Option 4">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="audioInput">Audio URL</label>
+          <div class="input-group">
+            <input id="audioInput" type="url" class="form-control" placeholder="Audio URL or upload file">
+            <input id="audioFile" type="file" class="form-control" accept="audio/*">
+            <button id="uploadButton" class="btn btn-secondary" type="button">Upload</button>
+            <div id="uploadSpinner" class="spinner-border text-primary" role="status" style="display:none;">
+              <span class="visually-hidden">Uploading...</span>
+            </div>
+          </div>
+          <div class="form-text">Enter a URL directly or select a file to upload to GitHub.</div>
+        </div>
+        <div class="form-check form-switch mb-4">
+          <input class="form-check-input" type="checkbox" id="enabledCheck" checked>
+          <label class="form-check-label" for="enabledCheck">Enabled</label>
+        </div>
+        <div class="d-flex justify-content-start gap-2">
+          <button type="submit" class="btn btn-success" id="submitButton">Add Question</button>
+          <button type="button" class="btn btn-secondary" id="cancelEditButton" style="display:none;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+</div>
 
-    <!-- Hidden audio element for playback -->
-    <audio id="audioPlayer"></audio>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxMxMQwKow4S_xC1hlXdwBgLDgq38rVXa5S0jGAHbajmaT1H2iMonJ0E0JOjSa_HY_g/exec';
 
-    <script>
-        // Set this constant to the URL of your deployed Google Apps Script Web App
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzP-aNrz7v0k1c6itgfNDPccBRWhEdI_w7Yz5vDlOk5UGwaPGtx7HKxMIV1W6sSbbXU/exec';
+let questions = [];
+let editMode = false;
 
-        let questions = [];
-        let editMode = false;
+document.addEventListener('DOMContentLoaded', () => {
+  fetchQuestions();
+});
 
-        // Fetch all questions from the API
-        function fetchQuestions() {
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    questions = data;
-                    renderTable();
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to load questions. Check API URL.');
-                });
-        }
+function fetchQuestions() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      questions = data;
+      renderTable();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to load questions. Check API URL.');
+    });
+}
 
-        // Render the questions table
-        function renderTable() {
-            const tbody = document.getElementById('questionsBody');
-            tbody.innerHTML = '';
-            questions.forEach(q => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${q.id}</td>
-                    <td>${escapeHTML(q.question)}</td>
-                    <td>${q.type}</td>
-                    <td>${q.option1 || ''}</td>
-                    <td>${q.option2 || ''}</td>
-                    <td>${q.option3 || ''}</td>
-                    <td>${q.option4 || ''}</td>
-                    <td><button class="btn btn-sm btn-outline-primary play-btn" data-url="${q.audioURL}">Play</button></td>
-                    <td><input type="checkbox" class="form-check-input toggle-enabled" data-id="${q.id}" ${q.enabled === true || q.enabled === 'TRUE' ? 'checked' : ''}></td>
-                    <td>
-                        <button class="btn btn-sm btn-info edit-btn" data-id="${q.id}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${q.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+function renderTable() {
+  const tbody = document.getElementById('questionsBody');
+  tbody.innerHTML = '';
+  questions.forEach(q => {
+    const tr = document.createElement('tr');
+    const optionsStr = q.type === 'mcq' ? [q.option1, q.option2, q.option3, q.option4].join('<br>') : '1–10';
+    tr.innerHTML = `
+      <td>${q.id}</td>
+      <td>${escapeHTML(q.question)}</td>
+      <td class="text-capitalize">${q.type}</td>
+      <td>${optionsStr}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary play-btn" data-url="${q.audioURL || ''}">Play</button>
+      </td>
+      <td>
+        <div class="form-check form-switch">
+          <input class="form-check-input toggle-enabled" type="checkbox" data-id="${q.id}" ${q.enabled === true || q.enabled === 'TRUE' ? 'checked' : ''}>
+        </div>
+      </td>
+      <td class="text-center">
+        <button class="btn btn-sm btn-info edit-btn" data-id="${q.id}">Edit</button>
+        <button class="btn btn-sm btn-danger delete-btn" data-id="${q.id}">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-        // Escape HTML for safe rendering
-        function escapeHTML(text) {
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+function escapeHTML(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
-        // Event delegation for play, edit, delete and toggle enabled actions
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('play-btn')) {
-                const url = e.target.getAttribute('data-url');
-                const audioPlayer = document.getElementById('audioPlayer');
-                audioPlayer.src = url;
-                audioPlayer.play();
-            } else if (e.target.classList.contains('edit-btn')) {
-                const id = Number(e.target.getAttribute('data-id'));
-                const question = questions.find(q => q.id == id);
-                if (question) {
-                    editMode = true;
-                    document.getElementById('formTitle').textContent = 'Edit Question';
-                    document.getElementById('submitButton').textContent = 'Update Question';
-                    document.getElementById('cancelEditButton').style.display = 'inline-block';
-                    document.getElementById('questionId').value = question.id;
-                    document.getElementById('questionInput').value = question.question;
-                    document.getElementById('typeSelect').value = question.type;
-                    document.getElementById('audioInput').value = question.audioURL;
-                    document.getElementById('enabledCheck').checked = question.enabled === true || question.enabled === 'TRUE';
-                    if (question.type === 'mcq') {
-                        document.getElementById('optionsGroup').classList.remove('hidden');
-                    } else {
-                        document.getElementById('optionsGroup').classList.add('hidden');
-                    }
-                    document.getElementById('option1').value = question.option1 || '';
-                    document.getElementById('option2').value = question.option2 || '';
-                    document.getElementById('option3').value = question.option3 || '';
-                    document.getElementById('option4').value = question.option4 || '';
-                }
-            } else if (e.target.classList.contains('delete-btn')) {
-                const id = Number(e.target.getAttribute('data-id'));
-                if (confirm('Are you sure you want to delete this question?')) {
-                    deleteQuestion(id);
-                }
-            } else if (e.target.classList.contains('toggle-enabled')) {
-                const id = Number(e.target.getAttribute('data-id'));
-                const enabled = e.target.checked;
-                toggleEnable(id, enabled);
-            }
-        });
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('play-btn')) {
+    const url = e.target.getAttribute('data-url');
+    if (url) {
+      const audio = new Audio(url);
+      audio.play();
+    }
+  } else if (e.target.classList.contains('edit-btn')) {
+    const id = Number(e.target.getAttribute('data-id'));
+    const q = questions.find(x => x.id == id);
+    if (q) populateFormForEdit(q);
+  } else if (e.target.classList.contains('delete-btn')) {
+    const id = Number(e.target.getAttribute('data-id'));
+    if (confirm('Are you sure you want to delete this question?')) {
+      deleteQuestion(id);
+    }
+  } else if (e.target.classList.contains('toggle-enabled')) {
+    const id = Number(e.target.getAttribute('data-id'));
+    const enabled = e.target.checked;
+    toggleEnabled(id, enabled);
+  }
+});
 
-        // Show/hide options inputs when type changes
-        document.getElementById('typeSelect').addEventListener('change', function () {
-            if (this.value === 'mcq') {
-                document.getElementById('optionsGroup').classList.remove('hidden');
-            } else {
-                document.getElementById('optionsGroup').classList.add('hidden');
-            }
-        });
+document.getElementById('typeSelect').addEventListener('change', function() {
+  document.getElementById('optionsGroup').style.display = this.value === 'mcq' ? 'block' : 'none';
+});
 
-        // Cancel editing and reset form
-        document.getElementById('cancelEditButton').addEventListener('click', function () {
-            resetForm();
-        });
+document.getElementById('cancelEditButton').addEventListener('click', () => resetForm());
 
-        // Handle add/update form submission
-        document.getElementById('questionForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const id = document.getElementById('questionId').value;
-            const question = document.getElementById('questionInput').value.trim();
-            const type = document.getElementById('typeSelect').value;
-            const audioURL = document.getElementById('audioInput').value.trim();
-            const enabled = document.getElementById('enabledCheck').checked;
+document.getElementById('questionForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const id = document.getElementById('questionId').value;
+  const question = document.getElementById('questionInput').value.trim();
+  const type = document.getElementById('typeSelect').value;
+  const audioURL = document.getElementById('audioInput').value.trim();
+  const enabled = document.getElementById('enabledCheck').checked;
+  let option1 = '', option2 = '', option3 = '', option4 = '';
+  if (type === 'mcq') {
+    option1 = document.getElementById('option1').value.trim();
+    option2 = document.getElementById('option2').value.trim();
+    option3 = document.getElementById('option3').value.trim();
+    option4 = document.getElementById('option4').value.trim();
+    if (!option1 || !option2 || !option3 || !option4) {
+      alert('Please fill all four options for MCQ.');
+      return;
+    }
+  }
+  if (!question || !type) {
+    alert('Please fill in the question and type.');
+    return;
+  }
+  const params = new URLSearchParams();
+  if (editMode) {
+    params.append('action', 'editQuestion');
+    params.append('id', id);
+  } else {
+    params.append('action', 'addQuestion');
+  }
+  params.append('question', question);
+  params.append('type', type);
+  params.append('option1', option1);
+  params.append('option2', option2);
+  params.append('option3', option3);
+  params.append('option4', option4);
+  params.append('audioURL', audioURL);
+  params.append('enabled', enabled);
+  fetch(API_URL, { method: 'POST', body: params })
+    .then(res => res.text())
+    .then(result => {
+      alert(result);
+      resetForm();
+      fetchQuestions();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to save.');
+    });
+});
 
-            let option1 = '', option2 = '', option3 = '', option4 = '';
-            if (type === 'mcq') {
-                option1 = document.getElementById('option1').value.trim();
-                option2 = document.getElementById('option2').value.trim();
-                option3 = document.getElementById('option3').value.trim();
-                option4 = document.getElementById('option4').value.trim();
-                if (!option1 || !option2 || !option3 || !option4) {
-                    alert('Please fill all four options for multiple choice question.');
-                    return;
-                }
-            }
+function populateFormForEdit(q) {
+  editMode = true;
+  document.getElementById('formTitle').textContent = 'Edit Question';
+  document.getElementById('submitButton').textContent = 'Save Changes';
+  document.getElementById('cancelEditButton').style.display = 'inline-block';
+  document.getElementById('questionId').value = q.id;
+  document.getElementById('questionInput').value = q.question;
+  document.getElementById('typeSelect').value = q.type;
+  document.getElementById('audioInput').value = q.audioURL || '';
+  document.getElementById('enabledCheck').checked = q.enabled === true || q.enabled === 'TRUE';
+  if (q.type === 'mcq') {
+    document.getElementById('optionsGroup').style.display = 'block';
+  } else {
+    document.getElementById('optionsGroup').style.display = 'none';
+  }
+  document.getElementById('option1').value = q.option1 || '';
+  document.getElementById('option2').value = q.option2 || '';
+  document.getElementById('option3').value = q.option3 || '';
+  document.getElementById('option4').value = q.option4 || '';
+}
 
-            if (!question || !type) {
-                alert('Please fill question and type.');
-                return;
-            }
+function resetForm() {
+  editMode = false;
+  document.getElementById('questionForm').reset();
+  document.getElementById('optionsGroup').style.display = 'none';
+  document.getElementById('questionId').value = '';
+  document.getElementById('formTitle').textContent = 'Add New Question';
+  document.getElementById('submitButton').textContent = 'Add Question';
+  document.getElementById('cancelEditButton').style.display = 'none';
+}
 
-            const params = new URLSearchParams();
-            if (editMode) {
-                params.append('action', 'editQuestion');
-                params.append('id', id);
-            } else {
-                params.append('action', 'addQuestion');
-            }
-            params.append('question', question);
-            params.append('type', type);
-            params.append('option1', option1);
-            params.append('option2', option2);
-            params.append('option3', option3);
-            params.append('option4', option4);
-            params.append('audioURL', audioURL);
-            params.append('enabled', enabled);
+function deleteQuestion(id) {
+  const params = new URLSearchParams();
+  params.append('action', 'deleteQuestion');
+  params.append('id', id);
+  fetch(API_URL, { method: 'POST', body: params })
+    .then(res => res.text())
+    .then(result => {
+      alert(result);
+      fetchQuestions();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to delete.');
+    });
+}
 
-            fetch(API_URL, {
-                method: 'POST',
-                body: params
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert(result);
-                resetForm();
-                fetchQuestions();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Failed to save question.');
-            });
-        });
+function toggleEnabled(id, enabled) {
+  const q = questions.find(x => x.id == id);
+  if (!q) return;
+  const params = new URLSearchParams();
+  params.append('action', 'editQuestion');
+  params.append('id', id);
+  params.append('question', q.question);
+  params.append('type', q.type);
+  params.append('option1', q.option1 || '');
+  params.append('option2', q.option2 || '');
+  params.append('option3', q.option3 || '');
+  params.append('option4', q.option4 || '');
+  params.append('audioURL', q.audioURL || '');
+  params.append('enabled', enabled);
+  fetch(API_URL, { method: 'POST', body: params })
+    .then(res => res.text())
+    .then(result => {
+      q.enabled = enabled;
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to toggle.');
+    });
+}
 
-        // Reset the form to add mode
-        function resetForm() {
-            editMode = false;
-            document.getElementById('formTitle').textContent = 'Add Question';
-            document.getElementById('submitButton').textContent = 'Add Question';
-            document.getElementById('cancelEditButton').style.display = 'none';
-            document.getElementById('questionForm').reset();
-            document.getElementById('optionsGroup').classList.add('hidden');
-            document.getElementById('questionId').value = '';
-        }
+// Audio upload handling
 
-        // Delete a question by ID
-        function deleteQuestion(id) {
-            const params = new URLSearchParams();
-            params.append('action', 'deleteQuestion');
-            params.append('id', id);
-            fetch(API_URL, {
-                method: 'POST',
-                body: params
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert(result);
-                fetchQuestions();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Failed to delete question.');
-            });
-        }
+document.getElementById('uploadButton').addEventListener('click', () => {
+  const fileInput = document.getElementById('audioFile');
+  const file = fileInput.files[0];
+  if (!file) {
+    alert('Please select a file.');
+    return;
+  }
+  uploadAudioFile(file);
+});
 
-        // Toggle enabled status for a question
-        function toggleEnable(id, enabled) {
-            const question = questions.find(q => q.id == id);
-            if (question) {
-                const params = new URLSearchParams();
-                params.append('action', 'editQuestion');
-                params.append('id', id);
-                params.append('question', question.question);
-                params.append('type', question.type);
-                params.append('option1', question.option1 || '');
-                params.append('option2', question.option2 || '');
-                params.append('option3', question.option3 || '');
-                params.append('option4', question.option4 || '');
-                params.append('audioURL', question.audioURL || '');
-                params.append('enabled', enabled);
-                fetch(API_URL, {
-                    method: 'POST',
-                    body: params
-                })
-                .then(response => response.text())
-                .then(result => {
-                    // update local state
-                    question.enabled = enabled;
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to update enabled state.');
-                });
-            }
-        }
+function uploadAudioFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result.split(',')[1];
+    const filename = Date.now() + '-' + file.name;
+    const params = new URLSearchParams();
+    params.append('action', 'uploadAudio');
+    params.append('file', base64);
+    params.append('filename', filename);
+    document.getElementById('uploadButton').disabled = true;
+    document.getElementById('uploadSpinner').style.display = 'inline-block';
+    fetch(API_URL, { method: 'POST', body: params })
+      .then(res => res.text())
+      .then(url => {
+        document.getElementById('audioInput').value = url;
+        alert('Audio uploaded!');
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Failed to upload audio.');
+      })
+      .finally(() => {
+        document.getElementById('uploadButton').disabled = false;
+        document.getElementById('uploadSpinner').style.display = 'none';
+      });
+  };
+  reader.readAsDataURL(file);
+}
+</script>
 
-        // Initial fetch on load
-        fetchQuestions();
-    </script>
 </body>
 </html>
