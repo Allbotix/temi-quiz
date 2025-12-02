@@ -12,41 +12,60 @@ html,body{
   background:#f0f4ff;
   overflow:hidden;
 }
-#container{
+
+/* SPLASH SCREEN */
+#splash {
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:99;
+}
+#splash img{
+  width:50%;
+  animation:fade 3s infinite;
+}
+@keyframes fade{
+  0%{opacity:0;} 
+  50%{opacity:1;} 
+  100%{opacity:0;}
+}
+
+/* QUIZ SCREEN */
+#quizContainer{
+  display:none;
   width:100%;height:100%;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;
-  text-align:center;padding:20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:20px;
 }
+
 #question{
-  font-size:3rem;
+  font-size:2.8rem;
   font-weight:bold;
-  margin-bottom:30px;
+  margin-bottom:40px;
+  padding:0 20px;
 }
+
 .answer{
   width:85%;
-  padding:25px;
+  padding:28px;
   margin:12px 0;
   font-size:2rem;
   border:none;
-  border-radius:20px;
+  border-radius:22px;
   background:linear-gradient(135deg,#5a8dee,#8868ff);
   color:white;
 }
-.navbtn{
-  padding:20px 28px;
-  border:none;
-  font-size:2rem;
-  margin:10px;
-  border-radius:12px;
-}
-#speak{
-  font-size:3.5rem;
-  background:none;border:none;
-  margin-bottom:10px;
-}
+
 #rating button{
-  width:120px;height:120px;
+  width:110px;height:110px;
   border-radius:50%;
   font-size:2rem;
   margin:10px;
@@ -54,24 +73,51 @@ html,body{
   color:white;
   border:none;
 }
+
+#speak{
+  font-size:3rem;
+  background:none;
+  border:none;
+  margin-bottom:20px;
+}
+
+/* NAV BUTTONS */
+.navbtn{
+  position:fixed;
+  bottom:25px;
+  padding:25px;
+  font-size:2rem;
+  border:none;
+  border-radius:15px;
+  background:#444;
+  color:white;
+}
+#prev { left:25px; }
+#next { right:25px; }
+
 </style>
 </head>
 
 <body>
-<div id="container">
+
+<!-- SPLASH SCREEN -->
+<div id="splash" onclick="startQuiz()">
+  <img src="assets/allbotix-logo.png">
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quizContainer">
 
   <button id="speak">🔊</button>
 
   <div id="question">Loading...</div>
 
   <div id="options"></div>
-
   <div id="rating" style="display:none;"></div>
 
-  <div>
-    <button class="navbtn" id="prev">⬅ Prev</button>
-    <button class="navbtn" id="next">Next ➡</button>
-  </div>
+  <!-- Navigation Buttons -->
+  <button id="prev" class="navbtn">⬅ Prev</button>
+  <button id="next" class="navbtn">Next ➡</button>
 
 </div>
 
@@ -80,32 +126,45 @@ const API_URL="https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZ
 
 let questions=[];
 let index=0;
-let idleTimer=null;
+let quizStarted=false;
 
-// ------------------------------
-// Load Questions
-// ------------------------------
-fetch(API_URL)
-  .then(r=>r.json())
-  .then(data=>{
-    questions=data.filter(q=>q.enabled==="TRUE" || q.enabled===true);
-    showQ();
-  });
+/****************************
+  START QUIZ (touch splash)
+*****************************/
+function startQuiz(){
+  document.getElementById("splash").style.display="none";
+  document.getElementById("quizContainer").style.display="flex";
+  quizStarted=true;
+  loadQuestions();
+}
 
-// ------------------------------
-// Show Question
-// ------------------------------
+/****************************
+  LOAD QUESTIONS FROM SHEET
+*****************************/
+function loadQuestions(){
+  fetch(API_URL)
+    .then(r=>r.json())
+    .then(data=>{
+      questions=data.filter(q=>q.enabled==="TRUE" || q.enabled===true);
+      showQ();
+    });
+}
+
+/****************************
+  DISPLAY QUESTION
+*****************************/
 function showQ(){
   if(!questions.length) return;
 
   const q=questions[index];
   document.getElementById("question").innerText=q.question;
 
-  const optDiv=document.getElementById("options");
-  const rateDiv=document.getElementById("rating");
-  optDiv.innerHTML="";
-  rateDiv.innerHTML="";
-  rateDiv.style.display="none";
+  const opts=document.getElementById("options");
+  const rating=document.getElementById("rating");
+
+  opts.innerHTML="";
+  rating.innerHTML="";
+  rating.style.display="none";
 
   if(q.type==="mcq"){
     [q.option1,q.option2,q.option3,q.option4].forEach(opt=>{
@@ -113,25 +172,43 @@ function showQ(){
       btn.className="answer";
       btn.innerText=opt;
       btn.onclick=()=>saveAnswer(opt);
-      optDiv.appendChild(btn);
+      opts.appendChild(btn);
     });
   } else {
-    rateDiv.style.display="block";
+    rating.style.display="block";
     for(let i=1;i<=10;i++){
       let b=document.createElement("button");
       b.innerText=i;
       b.onclick=()=>saveAnswer(i);
-      rateDiv.appendChild(b);
+      rating.appendChild(b);
     }
   }
 
   speakNow();
-  resetIdleTimer();
 }
 
-// ------------------------------
-// Save Answer
-// ------------------------------
+/****************************
+  SPEAK QUESTION + OPTIONS
+*****************************/
+document.getElementById("speak").onclick = speakNow;
+
+function speakNow(){
+  const q=questions[index];
+  let msg=q.question+". ";
+
+  if(q.type==="mcq"){
+    msg += "Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
+  } else {
+    msg += "Please rate from 1 to 10.";
+  }
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+}
+
+/****************************
+  SAVE ANSWER
+*****************************/
 function saveAnswer(ans){
   fetch(API_URL,{
     method:"POST",
@@ -146,52 +223,30 @@ function saveAnswer(ans){
     index++;
     showQ();
   } else {
-    document.body.innerHTML="<h1 style='font-size:3rem;text-align:center;margin-top:40%;'>Thank you! 🎉</h1>";
+    showComplete();
   }
 }
 
-// ------------------------------
-// Next & Prev
-// ------------------------------
+/****************************
+  NEXT / PREV BUTTONS
+*****************************/
 document.getElementById("next").onclick=function(){
-  if(index<questions.length-1){
-    index++;showQ();
-  }
+  if(index<questions.length-1){index++;showQ();}
 };
 document.getElementById("prev").onclick=function(){
-  if(index>0){
-    index--;showQ();
-  }
+  if(index>0){index--;showQ();}
 };
 
-// ------------------------------
-// Speak Question
-// ------------------------------
-document.getElementById("speak").onclick=speakNow;
+/****************************
+  QUIZ COMPLETE → RETURN TO SPLASH
+*****************************/
+function showComplete(){
+  document.body.innerHTML=
+    "<h1 style='font-size:3rem;text-align:center;margin-top:40%;'>Thank You 🎉</h1>";
 
-function speakNow(){
-  const q=questions[index];
-  let msg=q.question + ". ";
-  if(q.type==="mcq"){
-    msg+="Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
-  } else {
-    msg+="Please rate from 1 to 10.";
-  }
-  speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+  setTimeout(()=>{ window.location.href="splash.html"; }, 10000);
 }
 
-// ------------------------------
-// Idle Timer → return to splash
-// ------------------------------
-function resetIdleTimer(){
-  clearTimeout(idleTimer);
-  idleTimer=setTimeout(()=>{
-    window.location.href="splash.html";
-  }, 5*60*1000); // 5 minutes
-}
-
-document.body.addEventListener("click", resetIdleTimer);
-document.body.addEventListener("touchstart", resetIdleTimer);
 </script>
 
 </body>
