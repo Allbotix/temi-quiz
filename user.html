@@ -5,6 +5,7 @@
 <title>Temi Quiz</title>
 
 <style>
+/* GENERAL PAGE STYLES */
 html,body{
   margin:0;padding:0;
   width:100%;height:100%;
@@ -18,16 +19,21 @@ html,body{
   position:fixed;
   top:0;left:0;width:100%;height:100%;
   background:black;
+  color:white;
   display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  z-index:99;
+  z-index:9999;
 }
-#splash img{
-  width:50%;
+
+#splashText{
+  font-size:4rem;
+  font-weight:bold;
+  letter-spacing:4px;
   animation:fade 3s infinite;
 }
+
 @keyframes fade{
   0%{opacity:0;} 
   50%{opacity:1;} 
@@ -47,10 +53,10 @@ html,body{
 }
 
 #question{
-  font-size:2.8rem;
+  font-size:2.7rem;
   font-weight:bold;
   margin-bottom:40px;
-  padding:0 20px;
+  padding:0 25px;
 }
 
 .answer{
@@ -59,7 +65,7 @@ html,body{
   margin:12px 0;
   font-size:2rem;
   border:none;
-  border-radius:22px;
+  border-radius:20px;
   background:linear-gradient(135deg,#5a8dee,#8868ff);
   color:white;
 }
@@ -75,21 +81,21 @@ html,body{
 }
 
 #speak{
-  font-size:3rem;
+  font-size:3.2rem;
   background:none;
   border:none;
   margin-bottom:20px;
 }
 
-/* NAV BUTTONS */
+/* NAVIGATION BUTTONS */
 .navbtn{
   position:fixed;
   bottom:25px;
-  padding:25px;
+  padding:22px 30px;
   font-size:2rem;
   border:none;
-  border-radius:15px;
-  background:#444;
+  border-radius:18px;
+  background:#333;
   color:white;
 }
 #prev { left:25px; }
@@ -102,7 +108,7 @@ html,body{
 
 <!-- SPLASH SCREEN -->
 <div id="splash" onclick="startQuiz()">
-  <img src="assets/allbotix-logo.png">
+  <div id="splashText">Allbotix</div>
 </div>
 
 <!-- QUIZ SCREEN -->
@@ -122,25 +128,26 @@ html,body{
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZFW-sEdhFMqDUXCQZiUhc8KkW_5xzzVs6QlqprPoIlC/exec";
+/************************************
+   CONFIG
+*************************************/
+const API_URL = "YOUR_WEBAPP_URL"; // <<< PUT YOUR WEB APP URL HERE
 
 let questions=[];
 let index=0;
-let quizStarted=false;
 
-/****************************
-  START QUIZ (touch splash)
-*****************************/
+/************************************
+   START QUIZ
+*************************************/
 function startQuiz(){
   document.getElementById("splash").style.display="none";
   document.getElementById("quizContainer").style.display="flex";
-  quizStarted=true;
   loadQuestions();
 }
 
-/****************************
-  LOAD QUESTIONS FROM SHEET
-*****************************/
+/************************************
+   LOAD QUESTIONS FROM GOOGLE SHEET
+*************************************/
 function loadQuestions(){
   fetch(API_URL)
     .then(r=>r.json())
@@ -150,14 +157,14 @@ function loadQuestions(){
     });
 }
 
-/****************************
-  DISPLAY QUESTION
-*****************************/
+/************************************
+   SHOW QUESTION
+*************************************/
 function showQ(){
   if(!questions.length) return;
 
   const q=questions[index];
-  document.getElementById("question").innerText=q.question;
+  document.getElementById("question").innerText = q.question;
 
   const opts=document.getElementById("options");
   const rating=document.getElementById("rating");
@@ -167,12 +174,12 @@ function showQ(){
   rating.style.display="none";
 
   if(q.type==="mcq"){
-    [q.option1,q.option2,q.option3,q.option4].forEach(opt=>{
-      let btn=document.createElement("button");
-      btn.className="answer";
-      btn.innerText=opt;
-      btn.onclick=()=>saveAnswer(opt);
-      opts.appendChild(btn);
+    [q.option1, q.option2, q.option3, q.option4].forEach(opt=>{
+      let b=document.createElement("button");
+      b.className="answer";
+      b.innerText=opt;
+      b.onclick=()=>saveAnswer(opt);
+      opts.appendChild(b);
     });
   } else {
     rating.style.display="block";
@@ -184,31 +191,31 @@ function showQ(){
     }
   }
 
-  speakNow();
+  speakQuestion();
 }
 
-/****************************
-  SPEAK QUESTION + OPTIONS
-*****************************/
-document.getElementById("speak").onclick = speakNow;
+/************************************
+   TEXT TO SPEECH
+*************************************/
+document.getElementById("speak").onclick = speakQuestion;
 
-function speakNow(){
+function speakQuestion(){
   const q=questions[index];
-  let msg=q.question+". ";
+  let text=q.question + ". ";
 
   if(q.type==="mcq"){
-    msg += "Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
+    text+="Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
   } else {
-    msg += "Please rate from 1 to 10.";
+    text+="Please rate from 1 to 10.";
   }
 
   speechSynthesis.cancel();
-  speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-/****************************
-  SAVE ANSWER
-*****************************/
+/************************************
+   SAVE ANSWER
+*************************************/
 function saveAnswer(ans){
   fetch(API_URL,{
     method:"POST",
@@ -227,24 +234,28 @@ function saveAnswer(ans){
   }
 }
 
-/****************************
-  NEXT / PREV BUTTONS
-*****************************/
+/************************************
+   NEXT / PREVIOUS BUTTONS
+*************************************/
 document.getElementById("next").onclick=function(){
-  if(index<questions.length-1){index++;showQ();}
+  if(index<questions.length-1){
+    index++;showQ();
+  }
 };
 document.getElementById("prev").onclick=function(){
-  if(index>0){index--;showQ();}
+  if(index>0){
+    index--;showQ();
+  }
 };
 
-/****************************
-  QUIZ COMPLETE → RETURN TO SPLASH
-*****************************/
+/************************************
+   QUIZ COMPLETE (10 sec → splash)
+*************************************/
 function showComplete(){
-  document.body.innerHTML=
-    "<h1 style='font-size:3rem;text-align:center;margin-top:40%;'>Thank You 🎉</h1>";
+  document.body.innerHTML =
+    "<h1 style='font-size:3rem; text-align:center; margin-top:40%;'>Thank You 🎉</h1>";
 
-  setTimeout(()=>{ window.location.href="splash.html"; }, 10000);
+  setTimeout(()=>{ window.location.href="user.html"; }, 10000);
 }
 
 </script>
