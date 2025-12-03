@@ -256,24 +256,38 @@ document.getElementById("speak").onclick = speakQuestion;
  * @param {string|number} ans The selected answer value
  */
 function saveAnswer(ans){
-  if (!questions.length) return;
+  // Guard against invalid state
+  if (!questions.length || index < 0 || index >= questions.length) return;
   const q = questions[index];
   const params = new URLSearchParams();
+  // Tell the Apps Script to save the response
   params.append('action', 'saveResponse');
   params.append('questionId', q.id);
   params.append('answer', ans);
-  fetch(API_URL, { method: 'POST', body: params })
-    .then(() => {
-      // Move to next question or end the quiz
+  // Include a timestamp in case the backend expects it (older scripts use this field)
+  params.append('timestamp', new Date().toISOString());
+  fetch(API_URL, {
+    method: 'POST',
+    // Using no-cors mode so the request will succeed even if the response lacks CORS headers
+    mode: 'no-cors',
+    body: params,
+    headers: {
+      // Accept plain text response to avoid CORS parsing issues
+      'Accept': 'text/plain'
+    }
+  })
+    .catch(err => {
+      // Log any network or server errors
+      console.error('Error submitting answer:', err);
+    })
+    .finally(() => {
+      // Always advance to the next question regardless of success or failure
       index++;
       if (index < questions.length) {
         showQuestion();
       } else {
         showCompletion();
       }
-    })
-    .catch(err => {
-      console.error('Error submitting answer:', err);
     });
 }
 
