@@ -10,7 +10,7 @@ html,body{
   margin:0;padding:0;
   width:100%;height:100%;
   font-family:Arial, sans-serif;
-  background:#0a1f44; /* deep blue theme */
+  background:#f0f4ff;
   overflow:hidden;
 }
 
@@ -18,12 +18,12 @@ html,body{
 #splash {
   position:fixed;
   top:0;left:0;width:100%;height:100%;
-  background:url("background.png") no-repeat center center/cover;
+  background: url('background.png') no-repeat center center/cover;
+  color:white;
   display:flex;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  color:white;
   z-index:9999;
 }
 
@@ -35,8 +35,8 @@ html,body{
 }
 
 @keyframes fade{
-  0%{opacity:0;}
-  50%{opacity:1;}
+  0%{opacity:0;} 
+  50%{opacity:1;} 
   100%{opacity:0;}
 }
 
@@ -53,80 +53,54 @@ html,body{
 }
 
 #question{
-  font-size:2.8rem;
+  font-size:2.7rem;
   font-weight:bold;
   margin-bottom:40px;
   padding:0 25px;
-  color:white;
 }
 
-/* GLASS EFFECT ANSWER BUTTONS */
-.answer, #rating button{
+.answer{
   width:85%;
-  padding:30px;
+  padding:28px;
   margin:12px 0;
   font-size:2rem;
   border:none;
-  border-radius:25px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#5a8dee,#8868ff);
   color:white;
-  backdrop-filter:blur(10px);
-  background:rgba(255,255,255,0.15);
-  border:1px solid rgba(255,255,255,0.25);
-  box-shadow:0 8px 25px rgba(0,0,0,0.2);
-  position:relative;
-  overflow:hidden;
-  transition:all 0.25s ease-in-out;
 }
 
-/* Hover effect */
-.answer:hover,
-#rating button:hover {
-  transform:scale(1.06);
-  box-shadow:0 0 25px rgba(0,150,255,0.8);
-  cursor:pointer;
-}
-
-/* Ripple Effect */
-.answer:active::after,
-#rating button:active::after{
-  content:"";
-  position:absolute;
-  width:250px;height:250px;
-  background:rgba(255,255,255,0.3);
+#rating button{
+  width:110px;height:110px;
   border-radius:50%;
-  transform:scale(0);
-  animation:ripple 0.6s linear;
-  left:50%;top:50%;
-  transform:translate(-50%,-50%) scale(0);
-}
-@keyframes ripple{
-  to{transform:translate(-50%,-50%) scale(3);opacity:0;}
+  font-size:2rem;
+  margin:10px;
+  background:#00aaff;
+  color:white;
+  border:none;
 }
 
-/* SPEAK BUTTON */
 #speak{
-  font-size:3.5rem;
+  font-size:3.2rem;
   background:none;
   border:none;
   margin-bottom:20px;
-  color:white;
 }
 
-/* NAV BUTTONS */
+/* NAVIGATION BUTTONS */
 .navbtn{
   position:fixed;
   bottom:25px;
-  padding:22px 35px;
+  padding:22px 30px;
   font-size:2rem;
   border:none;
-  border-radius:20px;
-  background:rgba(0,0,0,0.5);
+  border-radius:18px;
+  background:#333;
   color:white;
-  backdrop-filter:blur(6px);
-  box-shadow:0 4px 15px rgba(0,0,0,0.4);
 }
-#prev{ left:25px; }
-#next{ right:25px; }
+#prev { left:25px; }
+#next { right:25px; }
+
 </style>
 </head>
 
@@ -147,48 +121,49 @@ html,body{
   <div id="options"></div>
   <div id="rating" style="display:none;"></div>
 
+  <!-- Navigation Buttons -->
   <button id="prev" class="navbtn">⬅ Prev</button>
   <button id="next" class="navbtn">Next ➡</button>
 
 </div>
 
 <script>
-/************************
-  CONFIG
-*************************/
-const API_URL = "https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZFW-sEdhFMqDUXCQZiUhc8KkW_5xzzVs6QlqprPoIlC/exec";
+/************************************
+   CONFIG
+*************************************/
+const API_URL = "https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZFW-sEdhFMqDUXCQZiUhc8KkW_5xzzVs6QlqprPoIlC/exec"; // <<< PUT YOUR WEB APP URL HERE
 
 let questions=[];
 let index=0;
 
-/************************
-  START QUIZ
-*************************/
+/************************************
+   START QUIZ
+*************************************/
 function startQuiz(){
   document.getElementById("splash").style.display="none";
   document.getElementById("quizContainer").style.display="flex";
   loadQuestions();
 }
 
-/************************
-  LOAD QUESTIONS
-*************************/
+/************************************
+   LOAD QUESTIONS FROM GOOGLE SHEET
+*************************************/
 function loadQuestions(){
   fetch(API_URL)
     .then(r=>r.json())
     .then(data=>{
-      questions = data.filter(q => String(q.enabled).toLowerCase()==="true");
+      questions = data.filter(q => String(q.enabled).toLowerCase() === "true");
       showQ();
     });
 }
 
-/************************
-  SHOW QUESTION
-*************************/
+/************************************
+   SHOW QUESTION
+*************************************/
 function showQ(){
   if(!questions.length) return;
 
-  const q = questions[index];
+  const q=questions[index];
   document.getElementById("question").innerText = q.question;
 
   const opts=document.getElementById("options");
@@ -199,14 +174,10 @@ function showQ(){
   rating.style.display="none";
 
   if(q.type==="mcq"){
-    [q.option1,q.option2,q.option3,q.option4].forEach(opt=>{
+    [q.option1, q.option2, q.option3, q.option4].forEach(opt=>{
       let b=document.createElement("button");
       b.className="answer";
       b.innerText=opt;
-
-      /* Speak on hover */
-      b.onmouseenter=()=>speak(opt);
-
       b.onclick=()=>saveAnswer(opt);
       opts.appendChild(b);
     });
@@ -214,39 +185,37 @@ function showQ(){
     rating.style.display="block";
     for(let i=1;i<=10;i++){
       let b=document.createElement("button");
-      b.className="answer";
       b.innerText=i;
-
-      b.onmouseenter=()=>speak("Rating " + i);
-
       b.onclick=()=>saveAnswer(i);
       rating.appendChild(b);
     }
   }
 
-  speak(q.question);
+  speakQuestion();
 }
 
-/************************
-  TEXT TO SPEECH
-*************************/
-function speak(text){
+/************************************
+   TEXT TO SPEECH
+*************************************/
+document.getElementById("speak").onclick = speakQuestion;
+
+function speakQuestion(){
+  const q=questions[index];
+  let text=q.question + ". ";
+
+  if(q.type==="mcq"){
+    text+="Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
+  } else {
+    text+="Please rate from 1 to 10.";
+  }
+
   speechSynthesis.cancel();
   speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-document.getElementById("speak").onclick=function(){
-  const q = questions[index];
-  if(q.type==="mcq"){
-    speak(q.question + ". Options are " + q.option1 + ", " + q.option2 + ", " + q.option3 + ", " + q.option4);
-  } else {
-    speak(q.question + ". Please rate from 1 to 10.");
-  }
-};
-
-/************************
-  SAVE ANSWER
-*************************/
+/************************************
+   SAVE ANSWER
+*************************************/
 function saveAnswer(ans){
   const params = new URLSearchParams();
   params.append("action","saveResponse");
@@ -257,50 +226,57 @@ function saveAnswer(ans){
   fetch(API_URL,{
     method:"POST",
     mode:"no-cors",
-    body:params
+    body:params,
+    headers:{ "Accept":"text/plain" }
   })
+  .catch(()=>{})  
   .finally(()=>{
     if(index < questions.length-1){
       index++;
       showQ();
-    } else showComplete();
+    } else {
+      showComplete();
+    }
   });
 }
 
-/************************
-  NEXT / PREV
-*************************/
+/************************************
+   NEXT / PREVIOUS BUTTONS
+*************************************/
 document.getElementById("next").onclick=function(){
   if(index<questions.length-1){
-    index++; showQ();
+    index++;showQ();
   }
 };
 document.getElementById("prev").onclick=function(){
   if(index>0){
-    index--; showQ();
+    index--;showQ();
   }
 };
 
-/************************
-  THANK YOU SCREEN
-*************************/
+/************************************
+   QUIZ COMPLETE (10 sec → splash)
+*************************************/
 function showComplete(){
-  document.body.innerHTML=`
+  document.body.innerHTML = `
     <div style="
       width:100%;height:100%;
       background:url('background.png') no-repeat center center/cover;
       display:flex;
       justify-content:center;
       align-items:center;
-      color:white;
       font-size:3rem;
-      text-align:center;">
+      color:white;
+      text-align:center;
+    ">
       Thank You 🎉
     </div>
   `;
-  setTimeout(()=>location.href="user.html",10000);
+
+  setTimeout(()=>{ window.location.href="user.html"; }, 10000);
 }
 
 </script>
+
 </body>
 </html>
