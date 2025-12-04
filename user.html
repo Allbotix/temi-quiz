@@ -18,7 +18,7 @@ html,body{
 #splash {
   position:fixed;
   top:0;left:0;width:100%;height:100%;
-  background:black;
+  background: url('background.png') no-repeat center center/cover;
   color:white;
   display:flex;
   justify-content:center;
@@ -44,6 +44,7 @@ html,body{
 #quizContainer{
   display:none;
   width:100%;height:100%;
+  display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
@@ -67,7 +68,6 @@ html,body{
   border-radius:20px;
   background:linear-gradient(135deg,#5a8dee,#8868ff);
   color:white;
-  cursor:pointer;
 }
 
 #rating button{
@@ -78,7 +78,6 @@ html,body{
   background:#00aaff;
   color:white;
   border:none;
-  cursor:pointer;
 }
 
 #speak{
@@ -86,7 +85,6 @@ html,body{
   background:none;
   border:none;
   margin-bottom:20px;
-  cursor:pointer;
 }
 
 /* NAVIGATION BUTTONS */
@@ -99,7 +97,6 @@ html,body{
   border-radius:18px;
   background:#333;
   color:white;
-  cursor:pointer;
 }
 #prev { left:25px; }
 #next { right:25px; }
@@ -131,195 +128,152 @@ html,body{
 </div>
 
 <script>
-/*
- * Configuration: replace YOUR_WEBAPP_URL with the URL of your deployed Google Apps Script.
- * The Apps Script must return JSON from doGet() and accept POST requests for saving responses.
- */
-const API_URL = "https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZFW-sEdhFMqDUXCQZiUhc8KkW_5xzzVs6QlqprPoIlC/exec"; // TODO: replace this with your actual Web App URL
+/************************************
+   CONFIG
+*************************************/
+const API_URL = "https://script.google.com/macros/s/AKfycbzVgZWYScmH7II7TK4rg3-tbZFW-sEdhFMqDUXCQZiUhc8KkW_5xzzVs6QlqprPoIlC/exec"; // <<< PUT YOUR WEB APP URL HERE
 
-let questions = [];
-let index = 0;
+let questions=[];
+let index=0;
 
-/**
- * Starts the quiz by hiding the splash screen and loading questions.
- */
+/************************************
+   START QUIZ
+*************************************/
 function startQuiz(){
-  document.getElementById("splash").style.display = "none";
-  const quizContainer = document.getElementById("quizContainer");
-  quizContainer.style.display = "flex";
-  // ensure flex-direction is applied only after display is set
-  quizContainer.style.flexDirection = "column";
-  quizContainer.style.justifyContent = "center";
-  quizContainer.style.alignItems = "center";
+  document.getElementById("splash").style.display="none";
+  document.getElementById("quizContainer").style.display="flex";
   loadQuestions();
 }
 
-/**
- * Fetches questions from the Google Apps Script Web App and filters by the enabled flag.
- * If no enabled questions exist, shows a message instead of attempting to display a question.
- */
+/************************************
+   LOAD QUESTIONS FROM GOOGLE SHEET
+*************************************/
 function loadQuestions(){
   fetch(API_URL)
-    .then(response => response.json())
-    .then(data => {
-      // Convert enabled value to string and lower-case to handle boolean and string cases
+    .then(r=>r.json())
+    .then(data=>{
       questions = data.filter(q => String(q.enabled).toLowerCase() === "true");
-      index = 0;
-      if (questions.length === 0) {
-        // No questions enabled, show a notice and exit gracefully
-        const qDiv = document.getElementById("question");
-        qDiv.textContent = "No questions available.";
-        document.getElementById("options").innerHTML = "";
-        document.getElementById("rating").style.display = "none";
-        return;
-      }
-      showQuestion();
-    })
-    .catch(err => {
-      console.error('Error loading questions:', err);
-      const qDiv = document.getElementById("question");
-      qDiv.textContent = "Error loading questions.";
-      document.getElementById("options").innerHTML = "";
-      document.getElementById("rating").style.display = "none";
+      showQ();
     });
 }
 
-/**
- * Displays the current question and options (or rating buttons) based on its type.
- * Also triggers text-to-speech to read out the question and options.
- */
-function showQuestion(){
-  // If index is out of range or no questions remain, end the quiz
-  if (index < 0 || index >= questions.length) {
-    showCompletion();
-    return;
-  }
+/************************************
+   SHOW QUESTION
+*************************************/
+function showQ(){
+  if(!questions.length) return;
 
-  const q = questions[index];
-  document.getElementById("question").textContent = q.question;
+  const q=questions[index];
+  document.getElementById("question").innerText = q.question;
 
-  const opts = document.getElementById("options");
-  const ratingDiv = document.getElementById("rating");
+  const opts=document.getElementById("options");
+  const rating=document.getElementById("rating");
 
-  opts.innerHTML = "";
-  ratingDiv.innerHTML = "";
-  ratingDiv.style.display = "none";
+  opts.innerHTML="";
+  rating.innerHTML="";
+  rating.style.display="none";
 
-  // Show multiple choice buttons or rating buttons based on type
-  if (q.type === "mcq") {
-    const optionsArray = [q.option1, q.option2, q.option3, q.option4];
-    optionsArray.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.className = "answer";
-      btn.textContent = opt;
-      btn.onclick = () => saveAnswer(opt);
-      opts.appendChild(btn);
+  if(q.type==="mcq"){
+    [q.option1, q.option2, q.option3, q.option4].forEach(opt=>{
+      let b=document.createElement("button");
+      b.className="answer";
+      b.innerText=opt;
+      b.onclick=()=>saveAnswer(opt);
+      opts.appendChild(b);
     });
   } else {
-    ratingDiv.style.display = "block";
-    for (let i = 1; i <= 10; i++) {
-      const btn = document.createElement("button");
-      btn.textContent = i;
-      btn.onclick = () => saveAnswer(i);
-      ratingDiv.appendChild(btn);
+    rating.style.display="block";
+    for(let i=1;i<=10;i++){
+      let b=document.createElement("button");
+      b.innerText=i;
+      b.onclick=()=>saveAnswer(i);
+      rating.appendChild(b);
     }
   }
 
-  // After rendering the question, speak it with options
   speakQuestion();
 }
 
-/**
- * Uses the browser Speech Synthesis API to read out the question and options.
- */
-function speakQuestion(){
-  // Cancel any ongoing speech to avoid overlapping reads
-  window.speechSynthesis.cancel();
-
-  if (!questions.length || index < 0 || index >= questions.length) return;
-  const q = questions[index];
-  let text = `${q.question}. `;
-  if (q.type === "mcq") {
-    text += `Options are: ${q.option1}, ${q.option2}, ${q.option3}, ${q.option4}.`;
-  } else {
-    text += "Please rate from 1 to 10.";
-  }
-  const utterance = new SpeechSynthesisUtterance(text);
-  window.speechSynthesis.speak(utterance);
-}
-
-// Bind speak button to read again
+/************************************
+   TEXT TO SPEECH
+*************************************/
 document.getElementById("speak").onclick = speakQuestion;
 
-/**
- * Saves the user's answer by sending a POST request to the Apps Script. Then advances to the next question.
- * @param {string|number} ans The selected answer value
- */
-function saveAnswer(ans){
-  // Guard against invalid state
-  if (!questions.length || index < 0 || index >= questions.length) return;
-  const q = questions[index];
-  const params = new URLSearchParams();
-  // Tell the Apps Script to save the response
-  params.append('action', 'saveResponse');
-  params.append('questionId', q.id);
-  params.append('answer', ans);
-  // Include a timestamp in case the backend expects it (older scripts use this field)
-  params.append('timestamp', new Date().toISOString());
-  fetch(API_URL, {
-    method: 'POST',
-    // Using no-cors mode so the request will succeed even if the response lacks CORS headers
-    mode: 'no-cors',
-    body: params,
-    headers: {
-      // Accept plain text response to avoid CORS parsing issues
-      'Accept': 'text/plain'
-    }
-  })
-    .catch(err => {
-      // Log any network or server errors
-      console.error('Error submitting answer:', err);
-    })
-    .finally(() => {
-      // Always advance to the next question regardless of success or failure
-      index++;
-      if (index < questions.length) {
-        showQuestion();
-      } else {
-        showCompletion();
-      }
-    });
+function speakQuestion(){
+  const q=questions[index];
+  let text=q.question + ". ";
+
+  if(q.type==="mcq"){
+    text+="Options are: "+q.option1+", "+q.option2+", "+q.option3+", "+q.option4;
+  } else {
+    text+="Please rate from 1 to 10.";
+  }
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-/**
- * Handles the Next button event: advances to the next question if it exists.
- */
-document.getElementById("next").onclick = function(){
-  if (index < questions.length - 1) {
-    index++;
-    showQuestion();
+/************************************
+   SAVE ANSWER
+*************************************/
+function saveAnswer(ans){
+  const params = new URLSearchParams();
+  params.append("action","saveResponse");
+  params.append("questionId", questions[index].id);
+  params.append("answer", ans);
+  params.append("timestamp", Date.now());
+
+  fetch(API_URL,{
+    method:"POST",
+    mode:"no-cors",
+    body:params,
+    headers:{ "Accept":"text/plain" }
+  })
+  .catch(()=>{})  
+  .finally(()=>{
+    if(index < questions.length-1){
+      index++;
+      showQ();
+    } else {
+      showComplete();
+    }
+  });
+}
+
+/************************************
+   NEXT / PREVIOUS BUTTONS
+*************************************/
+document.getElementById("next").onclick=function(){
+  if(index<questions.length-1){
+    index++;showQ();
+  }
+};
+document.getElementById("prev").onclick=function(){
+  if(index>0){
+    index--;showQ();
   }
 };
 
-/**
- * Handles the Previous button event: goes back to the previous question if it exists.
- */
-document.getElementById("prev").onclick = function(){
-  if (index > 0) {
-    index--;
-    showQuestion();
-  }
-};
+/************************************
+   QUIZ COMPLETE (10 sec → splash)
+*************************************/
+function showComplete(){
+  document.body.innerHTML = `
+    <div style="
+      width:100%;height:100%;
+      background:url('background.png') no-repeat center center/cover;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:3rem;
+      color:white;
+      text-align:center;
+    ">
+      Thank You 🎉
+    </div>
+  `;
 
-/**
- * Shows the completion screen and then returns to the splash screen after a delay.
- */
-function showCompletion(){
-  // Display a thank you message
-  document.body.innerHTML =
-    "<h1 style='font-size:3rem; text-align:center; margin-top:40%;'>Thank You 🎉</h1>";
-  // After 10 seconds, reload the page to show splash screen again
-  setTimeout(() => { window.location.href = "user.html"; }, 10000);
+  setTimeout(()=>{ window.location.href="user.html"; }, 10000);
 }
 
 </script>
