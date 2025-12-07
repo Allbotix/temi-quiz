@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bharat Future City Slides</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #galleryContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+        }
+
+        .slideImage {
+            width: 100%;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        #exitBtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+
+        #exitBtn:hover {
+            background: rgba(255, 0, 0, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+
+<button id="exitBtn" onclick="closePage()">Exit ✕</button>
+
+<div id="galleryContainer">
+    <img src="slide1.png" class="slideImage">
+    <img src="slide2.png" class="slideImage">
+    <img src="slide3.png" class="slideImage">
+    <img src="slide4.png" class="slideImage">
+    <img src="slide5.png" class="slideImage">
+    <img src="slide6.png" class="slideImage">
+    <img src="slide7.png" class="slideImage">
+    <img src="slide8.png" class="slideImage">
+</div>
+
+<script>
+/* --------------------------
+   EXIT FUNCTION
+--------------------------- */
+function closePage() {
+    try {
+        window.close();
+    } catch (e) {
+        history.back();
+    }
+}
+
+/* --------------------------
+   AUTO CLOSE AFTER 30s OF NO ACTIVITY
+--------------------------- */
+let inactivityTimer;
+
+function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+        try { window.close(); } catch (e) { history.back(); }
+    }, 30000); // 30 seconds
+}
+
+// Events that count as activity
+window.addEventListener("scroll", resetTimer);
+window.addEventListener("touchstart", resetTimer);
+window.addEventListener("click", resetTimer);
+window.addEventListener("mousemove", resetTimer); // Desktop test support
+
+// Start inactivity timer
+resetTimer();
+</script>
+
+</body>
+</html>
